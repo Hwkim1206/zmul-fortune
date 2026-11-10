@@ -1,0 +1,744 @@
+/* ==========================================================
+   제주 동자석 행운카드 — 테마: 밤의 돌담 앞, 불 밝힌 동자석
+   ========================================================== */
+
+:root {
+  /* 색 — 캐릭터 그림에서 추출 */
+  --night:  #474746;   /* 페이지 배경, 캐릭터 PNG 배경(#45~#4A)의 중간값 */
+  --stone:  #333332;   /* 카드, 모달, 탭 바닥 */
+  --ash:    #979390;   /* 보조 텍스트, 비활성, 게이지 트랙 */
+  --rice:   #F7F2E4;   /* 본문 텍스트 */
+  --sunset: #F8DA97;   /* 버튼, 게이지, glow */
+  --moss:   #A8B88C;   /* 태그, 링크 포인트 */
+
+  /* 글꼴 */
+  --font-display: 'Jua', sans-serif;
+  --font-body: 'Gowun Dodum', sans-serif;
+
+  /* 형태 */
+  --radius-card: 20px;
+  --radius-pill: 999px;
+  --phone-w: 480px;
+  --gutter: 24px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body { height: 100%; }
+
+body {
+  background: #2b2b2a;
+  color: var(--rice);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  display: flex;
+  justify-content: center;
+}
+
+/* 폰 프레임: 모바일에서는 전체 화면, 데스크톱에서는 480px 중앙 */
+.phone {
+  position: relative;
+  width: 100%;
+  max-width: var(--phone-w);
+  min-height: 100dvh;
+  background: var(--night);
+  overflow: hidden;
+}
+@media (min-width: 520px) {
+  .phone {
+    min-height: 0;
+    height: min(900px, 100vh);
+    margin: 0 auto;
+    box-shadow: 0 0 0 1px rgba(255,255,255,.06), 0 30px 80px rgba(0,0,0,.5);
+  }
+}
+
+/* 워터마크: 레이아웃과 무관하게 프레임 하단에 깔림 */
+.watermark {
+  position: absolute;
+  left: 50%;
+  bottom: min(18px, 2dvh);
+  width: min(96px, 10.7dvh);
+  transform: translateX(-50%);
+  opacity: .6;
+  pointer-events: none;
+  user-select: none;
+  z-index: 0;
+  transition: bottom .9s cubic-bezier(.2,.7,.2,1);
+}
+/* 카드 화면에서는 아래 여백 중간에 두었다가, 뒤집히면 아래로 밀려 원래 자리로 */
+#card.active ~ .watermark { bottom: min(72px, 8dvh); }
+#card.active.revealed ~ .watermark { bottom: min(18px, 2dvh); }
+
+/* 화면 전환: 한 번에 하나만 보임 */
+.screen {
+  position: absolute;
+  inset: 0;
+  z-index: 1;          /* 워터마크보다 위 */
+  overflow-y: auto;    /* 화면이 짧은 기기에서는 스크롤 허용 */
+  display: none;
+  flex-direction: column;
+  padding: 0 var(--gutter);
+  /* 세로 값은 900px 프레임 기준 픽셀을 상한으로, 작은 화면에서는 높이에 비례해 축소 */
+  padding-top: max(min(25px, 2.8dvh), env(safe-area-inset-top));
+  /* 하단은 워터마크 자리를 미리 비워 둠 */
+  padding-bottom: calc(max(min(25px, 2.8dvh), env(safe-area-inset-bottom)) + min(44px, 4.9dvh));
+}
+.screen.active { display: flex; }
+
+/* ---------- 공통 요소 ---------- */
+
+h1, h2, h3 {
+  font-family: var(--font-display);
+  font-weight: 400;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  word-break: keep-all;   /* 단어 중간에서 줄바꿈 금지 */
+}
+
+.btn {
+  font-family: var(--font-display);
+  font-size: min(26px, 2.9dvh);
+  line-height: 1;
+  border: 0;
+  border-radius: var(--radius-pill);
+  padding: min(18px, 2dvh) 28px;
+  width: 100%;
+  cursor: pointer;
+  transition: transform .12s ease, filter .12s ease;
+}
+.btn:active { transform: translateY(2px) scale(.99); }
+.btn:focus-visible { outline: 3px solid var(--sunset); outline-offset: 3px; }
+
+.btn-primary {
+  background: var(--sunset);
+  color: var(--stone);
+  box-shadow: 0 6px 0 #c9a862, 0 14px 30px rgba(248,218,151,.18);
+}
+.btn-primary:active { box-shadow: 0 3px 0 #c9a862, 0 8px 20px rgba(248,218,151,.14); }
+
+/* 캐릭터 스프라이트: 4등분, 순서 꽃·거울·횃불·수저 */
+/* 캐릭터 개별 PNG: 원본에서 bounding box로 잘라 같은 캔버스(407×553)에 발 정렬 */
+.char {
+  aspect-ratio: 407 / 553;
+  background-size: contain;
+  background-position: center bottom;
+  background-repeat: no-repeat;
+}
+.char.flower { background-image: url('../assets/char_flower.png'); }
+.char.mirror { background-image: url('../assets/char_mirror.png'); }
+.char.torch  { background-image: url('../assets/char_torch.png'); }
+.char.spoon  { background-image: url('../assets/char_spoon.png'); }
+
+/* ---------- 01 인트로 ---------- */
+
+/* 내용 전체를 세로 가운데 묶어 위아래 여백을 동일하게 */
+#intro { justify-content: center; text-align: center; }
+
+.intro-head { flex: 0 0 auto; }
+
+.intro-title {
+  font-size: min(clamp(52px, 14.3vw, 68px), 7.5dvh);
+  color: var(--rice);
+  text-shadow: 0 4px 0 rgba(0,0,0,.25);
+}
+
+.intro-sub {
+  margin-top: min(16px, 1.8dvh);
+  color: var(--ash);
+  font-size: min(20px, 2.2dvh);
+  line-height: 1.6;
+}
+
+/* 중앙 무대: 노을빛 달 + 캐릭터 넷 */
+.intro-stage {
+  position: relative;
+  flex: 0 0 auto;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  margin: -9% calc(var(--gutter) * -1 + 6px) 0; /* PNG 위쪽 빈 하늘만큼 끌어올림 (이미지 폭 비례) */
+}
+.intro-chars { max-height: 28dvh; object-fit: contain; object-position: bottom; }
+
+/* 하늘: 부제와 캐릭터 사이 빈 공간, 달이 그 한가운데 */
+.intro-sky {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: min(36px, 4dvh) 0 min(26px, 2.9dvh);
+}
+
+/* 달: 크레파스 윤곽선 + 은은한 빛 번짐 */
+.moon {
+  width: min(156px, 17.3dvh);
+  height: min(156px, 17.3dvh);
+  overflow: visible;
+  filter:
+    drop-shadow(0 0 14px rgba(248,218,151,.45))
+    drop-shadow(0 0 48px rgba(248,218,151,.22))
+    drop-shadow(0 0 110px rgba(248,218,151,.10));
+  pointer-events: none;
+}
+
+/* 원본 PNG의 위쪽 빈 하늘은 마스크로 녹여서 경계가 안 보이게 */
+.intro-chars {
+  position: relative;
+  width: 100%;
+  display: block;
+  margin-bottom: -3%;
+}
+
+.intro-foot { padding-top: min(24px, 2.7dvh); }
+
+/* ---------- 공통 페이지 구조 (02~06) ---------- */
+
+.page-head { flex: 0 0 auto; text-align: center; padding-top: min(12px, 1.3dvh); }
+
+/* 인트로 제목·부제와 동일한 크기 */
+.page-title {
+  font-size: min(clamp(52px, 14.3vw, 68px), 7.5dvh);
+  color: var(--rice);
+  text-shadow: 0 4px 0 rgba(0,0,0,.25);
+}
+
+.page-sub {
+  margin-top: min(16px, 1.8dvh);
+  color: var(--ash);
+  font-size: min(20px, 2.2dvh);
+  line-height: 1.6;
+}
+
+.page-foot { flex: 0 0 auto; padding-top: min(24px, 2.7dvh); }
+
+/* ---------- 02 생년월일 ---------- */
+
+#birth { justify-content: center; }
+
+.birth-body {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: min(40px, 4.4dvh);
+}
+
+.birth-char { width: min(150px, 16.7dvh); margin-bottom: min(36px, 4dvh); } /* 캔버스 하단 여백 포함해 위쪽과 동일 */
+
+#birth .page-foot { padding-top: min(40px, 4.4dvh); }
+
+/* 입력 줄: 가로폭을 줄이고 가운데 배치 */
+.birth-form {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr 1fr;
+  gap: 10px;
+  width: 100%;
+  max-width: 320px;
+}
+
+.field {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  background: var(--stone);
+  border-radius: 16px;
+  padding: 0 10px;
+  height: min(52px, 5.8dvh);
+  box-shadow: inset 0 2px 0 rgba(0,0,0,.25), 0 1px 0 rgba(255,255,255,.05);
+}
+.field:focus-within { outline: 2px solid var(--sunset); outline-offset: 2px; }
+
+.field input {
+  flex: 1;
+  min-width: 0;
+  width: 100%;
+  background: transparent;
+  border: 0;
+  color: var(--rice);
+  font-family: var(--font-display);
+  font-size: 22px;
+  text-align: center;
+  outline: none;
+}
+.field input::placeholder { color: rgba(151,147,144,.45); }
+.field.is-error { outline: 2px solid #e0a080; outline-offset: 2px; }
+
+.field span {
+  color: var(--ash);
+  font-family: var(--font-display);
+  font-size: 17px;
+  flex: 0 0 auto;
+}
+
+.field-error {
+  margin-top: 14px;
+  color: var(--sunset);
+  font-size: 15px;
+  text-align: center;
+}
+
+/* ---------- 03 로딩 ---------- */
+
+#loading { justify-content: center; }
+
+/* 말줄임표 점 3개가 차례로 깜빡임 */
+.dots i { font-style: normal; opacity: .25; animation: dot 1.2s infinite; }
+.dots i:nth-child(2) { animation-delay: .2s; }
+.dots i:nth-child(3) { animation-delay: .4s; }
+@keyframes dot { 0%, 60%, 100% { opacity: .25; } 30% { opacity: 1; } }
+
+.loading-body {
+  flex: 0 0 auto;
+  display: flex;
+  justify-content: center;
+  margin-top: min(48px, 5.3dvh);
+}
+
+/* 좌우로 갸웃갸웃 — 발을 축으로 */
+.loading-char {
+  width: min(170px, 18.9dvh);
+  transform-origin: 50% 95%;
+  animation: peek 2.4s ease-in-out infinite;
+}
+@keyframes peek {
+  0%, 100% { transform: rotate(-4deg); }
+  50%      { transform: rotate(4deg); }
+}
+
+.fact-card {
+  flex: 0 0 auto;
+  margin-top: min(54px, 6dvh);   /* 캐릭터 캔버스 하단 여백을 더해 위쪽과 시각적으로 동일 */
+  background: var(--stone);
+  border-radius: var(--radius-card);
+  padding: 20px 22px 22px;
+  box-shadow: inset 0 2px 0 rgba(0,0,0,.25), 0 1px 0 rgba(255,255,255,.05);
+}
+
+.fact-title {
+  font-family: var(--font-display);
+  font-size: 18px;
+  color: var(--sunset);
+  margin-bottom: 6px;
+}
+
+.fact-text {
+  color: var(--rice);
+  font-size: 17px;
+  line-height: 1.65;
+  word-break: keep-all;
+}
+
+/* ---------- 04 카드 뒤집기 ---------- */
+
+#card { justify-content: center; }
+
+/* 뒤집히면 카드가 1.5배로 커지고, 제목은 위로 밀리며 85%로 줄어듦 */
+#card .page-title, #card .page-sub, .card-stage, .card {
+  transition: font-size .9s cubic-bezier(.2,.7,.2,1), margin .9s cubic-bezier(.2,.7,.2,1), width .9s cubic-bezier(.2,.7,.2,1);
+}
+#card.revealed .page-title { font-size: min(clamp(44px, 12.2vw, 58px), 6.4dvh); }
+#card.revealed .page-sub   { font-size: min(17px, 1.9dvh); }
+#card.revealed .card-stage { margin-top: min(24px, 2.7dvh); }
+#card.revealed .card       { width: min(310px, 34.4dvh); }
+
+/* 뒤집힌 뒤에만 나타나는 버튼 */
+.card-foot {
+  padding-top: min(22px, 2.4dvh);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(8px);
+  transition: opacity .5s ease .7s, transform .5s ease .7s, visibility 0s linear 1.2s;
+}
+#card.revealed .card-foot {
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+  transition: opacity .5s ease .7s, transform .5s ease .7s, visibility 0s;
+}
+
+.card-stage {
+  flex: 0 0 auto;
+  display: flex;
+  justify-content: center;
+  margin-top: min(48px, 5.3dvh);
+}
+
+/* 카드 본체: 둥둥 떠 있음. glow는 filter 대신 면의 box-shadow로 (filter는 3D 회전을 평면화함) */
+.card {
+  width: min(240px, 26.7dvh);
+  max-width: 86vw;
+  aspect-ratio: 5 / 7;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  cursor: pointer;
+  animation: float 3s ease-in-out infinite;
+  perspective: 1200px;
+}
+.card:focus-visible { outline: 3px solid var(--sunset); outline-offset: 6px; border-radius: var(--radius-card); }
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-10px); }
+}
+
+.card-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  transition: transform .9s cubic-bezier(.2,.7,.2,1);
+}
+.card.flipped { animation: none; }
+.card.flipped .card-inner { transform: rotateY(180deg); }
+
+.card-face {
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius-card);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+/* 노을빛 glow + 바닥 그림자 (양면 공통) */
+.card-face::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  z-index: -1;
+  box-shadow:
+    0 0 16px rgba(248,218,151,.35),
+    0 0 48px rgba(248,218,151,.18),
+    0 18px 24px rgba(0,0,0,.35);
+}
+
+/* 뒷면: 밝은 회백색 바탕, 가는 안쪽 테두리, 즈물 심볼 */
+.card-back {
+  background: #E4E1D8;
+  box-shadow: inset 0 0 0 2px rgba(51,51,50,.18), inset 0 0 0 10px #E4E1D8, inset 0 0 0 11px rgba(51,51,50,.12);
+}
+.card-symbol { width: 46%; }
+
+/* 앞면: 쌀 크림 바탕, 캐릭터 + 지물 이름 */
+.card-front {
+  background: var(--rice);
+  transform: rotateY(180deg);
+  box-shadow: inset 0 0 0 2px rgba(51,51,50,.15), inset 0 0 0 10px var(--rice), inset 0 0 0 11px rgba(51,51,50,.10);
+  gap: 9%;
+  padding-top: 4%;   /* 캐릭터는 그대로, 글자만 아래로 */
+}
+.card-char { width: 60%; }
+.card-name {
+  font-family: var(--font-display);
+  font-size: 24px;
+  color: var(--stone);
+  transition: font-size .9s cubic-bezier(.2,.7,.2,1);
+}
+#card.revealed .card-name { font-size: 35px; }
+
+/* ---------- 05 메인 결과 ---------- */
+
+#result { justify-content: center; }
+#result .page-title { font-size: min(clamp(42px, 11.4vw, 54px), 6dvh); } /* 이 화면만 80% */
+
+.result-body {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: min(34px, 3.8dvh);
+}
+
+.result-char { width: min(165px, 18.3dvh); margin-bottom: min(22px, 2.4dvh); }
+
+.result-headline {
+  font-family: var(--font-display);
+  font-size: min(24px, 2.7dvh);
+  line-height: 1.4;
+  color: var(--rice);
+  text-align: center;
+  word-break: keep-all;
+  text-wrap: balance;   /* 두 줄 길이가 비슷하게 */
+  max-width: 24ch;
+}
+
+/* 키워드 태그 */
+.tags {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin-top: min(20px, 2.2dvh);
+}
+.tags li {
+  font-family: var(--font-display);
+  font-size: 16px;
+  color: var(--moss);
+  border: 1.5px solid var(--moss);
+  border-radius: var(--radius-pill);
+  padding: 5px 14px;
+  line-height: 1.2;
+}
+
+/* 행동 가이드 카드 (로딩 상식 카드와 같은 스타일) */
+.guide-card {
+  width: 100%;
+  margin-top: min(28px, 3.1dvh);
+  background: var(--stone);
+  border-radius: var(--radius-card);
+  padding: min(18px, 2dvh) 22px min(20px, 2.2dvh);
+  box-shadow: inset 0 2px 0 rgba(0,0,0,.25), 0 1px 0 rgba(255,255,255,.05);
+}
+.guide-title {
+  font-family: var(--font-display);
+  font-size: 18px;
+  color: var(--sunset);
+  margin-bottom: 6px;
+}
+.guide-text {
+  color: var(--rice);
+  font-size: 17px;
+  line-height: 1.65;
+  word-break: keep-all;
+}
+
+#result .page-foot { padding-top: min(14px, 1.6dvh); }
+
+/* ---------- 06 상세 운세 ---------- */
+
+/* 위는 고정 여백, 아래 버튼 덩어리는 카드와 화면 바닥 사이 정중앙 */
+#detail { justify-content: flex-start; padding-top: calc(min(25px, 2.8dvh) + 10dvh); }
+#detail .page-title { font-size: min(clamp(42px, 11.4vw, 54px), 6dvh); }
+#detail .page-foot {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding-top: 0;
+  padding-bottom: min(36px, 4dvh);   /* 링크 위치 고정 (화면 하단 워터마크 여백과 합산) */
+}
+#detail .page-foot .btn { margin: auto 0; position: relative; top: 12px; }   /* 카드와 링크 사이 정중앙. 아래 입체 그림자만큼 살짝 내림 */
+
+/* 탭 */
+.tabs {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 6px;
+  margin-top: min(36px, 4dvh);
+}
+.tab {
+  font-family: var(--font-display);
+  font-size: 17px;
+  color: var(--ash);
+  background: var(--stone);
+  border: 0;
+  border-radius: var(--radius-pill);
+  padding: 10px 0;
+  cursor: pointer;
+  transition: background .2s, color .2s;
+}
+.tab.is-active { background: var(--sunset); color: var(--stone); }
+.tab:focus-visible { outline: 2px solid var(--sunset); outline-offset: 2px; }
+
+/* 내용 카드 */
+.detail-card {
+  margin-top: min(14px, 1.6dvh);
+  min-height: min(330px, 36.7dvh);   /* 종합 탭 높이에 맞춰 고정 → 탭 전환 시 화면이 안 흔들림 */
+  background: var(--stone);
+  border-radius: var(--radius-card);
+  padding: 20px 22px 22px;
+  box-shadow: inset 0 2px 0 rgba(0,0,0,.25), 0 1px 0 rgba(255,255,255,.05);
+}
+.detail-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+.detail-label {
+  font-family: var(--font-display);
+  font-size: 24px;
+  color: var(--sunset);
+}
+.detail-score {
+  font-family: var(--font-display);
+  font-size: 30px;
+  color: var(--rice);
+}
+.detail-score small { font-size: 16px; color: var(--ash); margin-left: 2px; }
+
+/* 게이지 */
+.gauge {
+  height: 12px;
+  margin-top: 12px;
+  background: rgba(151,147,144,.25);
+  border-radius: var(--radius-pill);
+  overflow: hidden;
+}
+.gauge-fill {
+  height: 100%;
+  width: 0;
+  background: var(--sunset);
+  border-radius: var(--radius-pill);
+  transition: width .7s cubic-bezier(.2,.7,.2,1);
+}
+
+.detail-text {
+  margin-top: 16px;
+  color: var(--rice);
+  font-size: 17px;
+  line-height: 1.65;
+  word-break: keep-all;
+}
+
+/* 종합 탭: 4영역 미니 게이지 */
+.mini-list { list-style: none; margin-top: 16px; display: grid; gap: 10px; }
+.mini-list:empty { display: none; }
+.mini-list li {
+  display: grid;
+  grid-template-columns: 44px 1fr 36px;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-display);
+  font-size: 15px;
+  color: var(--ash);
+}
+.mini-list .gauge { margin: 0; height: 8px; }
+.mini-list .mini-score { text-align: right; color: var(--rice); }
+
+/* 브랜드 링크 (공유 버튼 아래) */
+.brand-links {
+  display: flex;
+  justify-content: center;
+  gap: 28px;
+  margin-top: min(26px, 2.9dvh);
+}
+.brand-links a {
+  color: var(--moss);
+  font-family: var(--font-display);
+  font-size: 19px;
+  text-decoration: none;
+  border-bottom: 1.5px solid rgba(168,184,140,.5);
+  padding-bottom: 2px;
+}
+
+/* ---------- 07 공유 모달 ---------- */
+
+.modal {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  align-items: flex-end;
+}
+.modal[hidden] { display: none; }
+
+.modal-dim {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,.55);
+}
+
+/* 바텀시트: 아래서 올라옴 */
+.sheet {
+  position: relative;
+  width: 100%;
+  background: var(--stone);
+  border-radius: 24px 24px 0 0;
+  padding: 22px var(--gutter) max(24px, env(safe-area-inset-bottom));
+  box-shadow: 0 -10px 40px rgba(0,0,0,.4);
+  animation: sheet-up .35s cubic-bezier(.2,.7,.2,1);
+}
+@keyframes sheet-up {
+  from { transform: translateY(40px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+.sheet-close {
+  position: absolute;
+  top: 14px;
+  right: 18px;
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(247,242,228,.08);
+  color: var(--rice);
+  font-size: 26px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.sheet-title {
+  font-size: 24px;
+  color: var(--rice);
+  text-align: center;
+}
+
+/* 공유 카드: 저장되는 이미지 그 자체 */
+.share-card {
+  width: 266px;
+  margin: 16px auto 0;
+  padding: 18px 18px 14px;
+  background: var(--rice);
+  border-radius: 18px;
+  box-shadow: inset 0 0 0 2px rgba(51,51,50,.15), inset 0 0 0 8px var(--rice), inset 0 0 0 9px rgba(51,51,50,.10);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  color: var(--stone);
+}
+.share-char { width: 70%; margin-top: 14px; }
+.share-name {
+  font-family: var(--font-display);
+  font-size: 22px;
+  margin-top: 6px;
+}
+.share-headline {
+  font-size: 14px;
+  line-height: 1.5;
+  margin-top: 2px;
+  word-break: keep-all;
+  text-wrap: balance;
+}
+.share-scores {
+  list-style: none;
+  display: flex;
+  gap: 10px;
+  margin-top: 12px;
+  font-family: var(--font-display);
+  font-size: 13px;
+  color: #8a867f;
+}
+.share-scores b { color: var(--stone); font-weight: 400; margin-left: 2px; }
+.share-logo { width: 56px; margin-top: 12px; }
+
+.sheet-actions {
+  display: grid;
+  gap: 10px;
+  margin-top: 18px;
+}
+.btn-kakao {
+  background: #FEE500;
+  color: #191919;
+  box-shadow: 0 6px 0 #c9b500;
+}
+.btn:disabled {
+  background: rgba(151,147,144,.25);
+  color: var(--ash);
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+/* 움직임 줄이기 설정 존중 */
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; animation: none !important; }
+}

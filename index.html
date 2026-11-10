@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>제주 동자석 행운카드</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Jua&family=Gowun+Dodum&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<!-- 공용 SVG 정의: 달 그라데이션, 크레파스 필터 (여러 화면에서 참조) -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <radialGradient id="moonFill" cx="42%" cy="38%" r="65%">
+      <stop offset="0" stop-color="#FBEBC2"/>
+      <stop offset=".6" stop-color="#F8DA97"/>
+      <stop offset="1" stop-color="#E6BF70"/>
+    </radialGradient>
+    <!-- 크레파스 느낌: 윤곽선을 살짝 흔들어 손그림처럼 -->
+    <filter id="crayon" x="-20%" y="-20%" width="140%" height="140%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="7" result="noise"/>
+      <feDisplacementMap in="SourceGraphic" in2="noise" scale="2.6" xChannelSelector="R" yChannelSelector="G" result="wobble"/>
+      <feGaussianBlur in="wobble" stdDeviation="0.3"/>
+    </filter>
+  </defs>
+</svg>
+<div class="phone">
+
+  <!-- 01 인트로 -->
+  <section class="screen active" id="intro">
+    <header class="intro-head">
+      <h1 class="intro-title">제주 동자석<br>행운카드</h1>
+      <p class="intro-sub">오늘, 제주 동자석이<br>당신에게 찾아올 행운을 알려드려요.</p>
+    </header>
+    <div class="intro-sky">
+      <svg class="moon" viewBox="0 0 120 120" aria-hidden="true">
+        <circle cx="60" cy="60" r="44" fill="url(#moonFill)" stroke="#2E2E2D" stroke-width="1.7" filter="url(#crayon)"/>
+      </svg>
+    </div>
+    <div class="intro-stage">
+      <img class="intro-chars" src="assets/characters.png" alt="꽃, 거울, 횃불, 수저를 든 동자석 넷">
+    </div>
+    <footer class="intro-foot">
+      <button class="btn btn-primary" data-go="birth">오늘의 행운카드 뽑기</button>
+    </footer>
+  </section>
+
+  <!-- 02 생년월일 -->
+  <section class="screen" id="birth">
+    <header class="page-head">
+      <h2 class="page-title">당신의 오늘을<br>알려주세요</h2>
+      <p class="page-sub">생년월일을 입력하면<br>오늘의 운세를 확인할 수 있어요.</p>
+    </header>
+    <div class="birth-body">
+      <div class="char flower birth-char" aria-hidden="true"></div>
+      <form class="birth-form" id="birthForm" novalidate>
+        <label class="field">
+          <input id="birthY" type="text" inputmode="numeric" maxlength="4" placeholder="1995" autocomplete="bday-year">
+          <span>년</span>
+        </label>
+        <label class="field">
+          <input id="birthM" type="text" inputmode="numeric" maxlength="2" placeholder="1" autocomplete="bday-month">
+          <span>월</span>
+        </label>
+        <label class="field">
+          <input id="birthD" type="text" inputmode="numeric" maxlength="2" placeholder="1" autocomplete="bday-day">
+          <span>일</span>
+        </label>
+      </form>
+      <p class="field-error" id="birthError" hidden>날짜를 다시 확인해 주세요.</p>
+    </div>
+    <footer class="page-foot">
+      <button class="btn btn-primary" type="submit" form="birthForm">운세 확인하고 카드 뽑기</button>
+    </footer>
+  </section>
+
+  <!-- 03 로딩 -->
+  <section class="screen" id="loading">
+    <header class="page-head">
+      <h2 class="page-title"><span id="loadingTitle">동자석이<br>운세를 보는 중</span><span class="dots"><i>.</i><i>.</i><i>.</i></span></h2>
+    </header>
+    <div class="loading-body">
+      <div class="char flower loading-char" id="loadingChar" aria-hidden="true"></div>
+    </div>
+    <aside class="fact-card">
+      <p class="fact-title">동자석 이야기</p>
+      <p class="fact-text" id="factText"></p>
+    </aside>
+  </section>
+
+  <!-- 04 카드 뒤집기 -->
+  <section class="screen" id="card">
+    <header class="page-head">
+      <h2 class="page-title">행운의 카드가<br>도착했어요</h2>
+      <p class="page-sub">카드를 터치해 보세요.</p>
+    </header>
+    <div class="card-stage">
+      <button class="card" id="luckCard" type="button" aria-label="카드 뒤집기">
+        <div class="card-inner">
+          <div class="card-face card-back">
+            <img class="card-symbol" src="assets/symbol_flower.png" alt="">
+          </div>
+          <div class="card-face card-front">
+            <div class="char flower card-char" id="cardChar"></div>
+            <p class="card-name" id="cardName">꽃을 든 동자석</p>
+          </div>
+        </div>
+      </button>
+    </div>
+    <footer class="page-foot card-foot">
+      <button class="btn btn-primary" data-go="result">오늘의 행운 보기</button>
+    </footer>
+  </section>
+
+  <!-- 05 메인 결과 -->
+  <section class="screen" id="result">
+    <header class="page-head">
+      <h2 class="page-title">오늘 당신에게<br>찾아온 행운</h2>
+    </header>
+    <div class="result-body">
+      <div class="char flower result-char" id="resultChar" aria-hidden="true"></div>
+      <p class="result-headline" id="resultHeadline">새로운 행운이 꽃처럼 피어나는 날이에요.</p>
+      <ul class="tags" id="resultTags"></ul>
+      <aside class="guide-card">
+        <p class="guide-title">오늘의 운세 Tip!</p>
+        <p class="guide-text" id="resultGuide"></p>
+      </aside>
+    </div>
+    <footer class="page-foot">
+      <button class="btn btn-primary" data-go="detail">상세 운세 확인하기</button>
+    </footer>
+  </section>
+
+  <!-- 06 상세 운세 -->
+  <section class="screen" id="detail">
+    <header class="page-head">
+      <h2 class="page-title">오늘의 상세 운세</h2>
+    </header>
+
+    <div class="tabs" id="detailTabs" role="tablist">
+      <button class="tab is-active" role="tab" data-tab="total">종합</button>
+      <button class="tab" role="tab" data-tab="luck">행운</button>
+      <button class="tab" role="tab" data-tab="relation">관계</button>
+      <button class="tab" role="tab" data-tab="health">건강</button>
+      <button class="tab" role="tab" data-tab="money">재물</button>
+    </div>
+
+    <div class="detail-card">
+      <div class="detail-head">
+        <p class="detail-label" id="detailLabel">활짝 핀 날</p>
+        <p class="detail-score"><span id="detailScore">0</span><small>점</small></p>
+      </div>
+      <div class="gauge"><div class="gauge-fill" id="detailGauge"></div></div>
+      <p class="detail-text" id="detailText"></p>
+      <!-- 종합 탭에서만: 4영역 요약 -->
+      <ul class="mini-list" id="miniList"></ul>
+    </div>
+
+    <footer class="page-foot">
+      <button class="btn btn-primary" data-open="share">결과 공유하기</button>
+      <div class="brand-links">
+        <a href="https://www.instagram.com/zmul_jeju/" target="_blank" rel="noopener">즈물 인스타그램</a>
+        <a href="https://map.naver.com/p/entry/place/1027952537" target="_blank" rel="noopener">즈물 찾아오기</a>
+      </div>
+    </footer>
+  </section>
+
+  <!-- 07 공유 모달 -->
+  <!-- 07 공유 모달 (바텀시트) -->
+  <div class="modal" id="share" hidden>
+    <div class="modal-dim" data-close="share"></div>
+    <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="shareTitle">
+      <button class="sheet-close" type="button" data-close="share" aria-label="닫기">×</button>
+      <h3 class="sheet-title" id="shareTitle">결과 공유하기</h3>
+
+      <!-- 이 영역이 그대로 이미지로 저장됨. 생년월일 없음 -->
+      <div class="share-card" id="shareCard">
+        <div class="char flower share-char" id="shareChar"></div>
+        <p class="share-name" id="shareName">꽃을 든 동자석</p>
+        <p class="share-headline" id="shareHeadline"></p>
+        <ul class="share-scores" id="shareScores"></ul>
+        <img class="share-logo" src="assets/logo_zmul.png" alt="">
+      </div>
+
+      <div class="sheet-actions">
+        <button class="btn btn-primary" type="button" id="saveImageBtn">이미지 저장</button>
+        <button class="btn btn-kakao" type="button" id="kakaoBtn" disabled>카카오톡 공유 (준비 중)</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 워터마크: 모든 화면 하단에 배경처럼. 화면들 뒤에 두어 #card.active ~ 선택자로 위치 조정 -->
+  <img class="watermark" src="assets/logo_zmul.png" alt="">
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="js/content.js"></script>
+<script src="js/fortune.js"></script>
+<script src="js/share.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
